@@ -14,7 +14,14 @@ import org.springframework.web.context.request.WebRequest;
 
 import java.util.Locale;
 import java.util.stream.Collectors;
-
+/**
+ * Centraliza o tratamento de exceções.
+ * <p>
+ * Anotada com {@link ControllerAdvice}, esta classe intercepta exceções lançadas
+ * pelos controllers e as transforma em respostas HTTP padronizadas
+ * no formato {@link ErrorResponseDTO}. Evita a dispersão de blocos try-catch
+ * e garante uma comunicação de erro consistente para os clientes da API.
+ */
 @Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
