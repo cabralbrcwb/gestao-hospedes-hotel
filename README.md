@@ -6,28 +6,73 @@
 
 </div>
 
-API RESTful completa para gestão de um hotel, desenvolvida com Spring Boot. O sistema permite o gerenciamento de hóspedes, controle de reservas, processos de check-in e check-out, e cálculo automático de custos de hospedagem, com foco em robustez e integridade de dados.
+API RESTful completa para gestão de um hotel, desenvolvida com Spring Boot, seguindo as melhores práticas de arquitetura e robustez de processos de negócio.
 
 ---
 
 ### 📋 Índice
 
 - [🎯 Visão Geral](#-visão-geral)
+- [✅ Checklist de Requisitos e Correções](#-checklist-de-requisitos-e-correções)
 - [🏗️ Arquitetura](#️-arquitetura)
-- [✔️ Checklist de Entidades e Atributos](#️-checklist-de-entidades-e-atributos)
-- [✨ Funcionalidades e Regras de Negócio](#-funcionalidades-e-regras-de-negócio)
 - [💻 Tecnologias Utilizadas](#-tecnologias-utilizadas)
 - [🚀 Endpoints da API](#-endpoints-da-api)
-- [📈 Histórico de Melhorias e Correções](#-histórico-de-melhorias-e-correções)
 - [⚙️ Como Executar o Projeto](#️-como-executar-o-projeto)
 - [📖 Documentação Swagger](#-documentação-swagger)
-- [👨‍💻 Autor](#-autor)
 
 ---
 
 ### 🎯 Visão Geral
 
-O **Belavista-Backend** é uma API RESTful projetada para simplificar a administração de um hotel, oferecendo funcionalidades para cadastrar hóspedes, gerenciar o ciclo de vida completo de uma reserva e controlar os processos de faturamento de forma eficiente, automatizada e segura.
+O **Belavista** é uma API RESTful projetada para simplificar a administração de um hotel, oferecendo funcionalidades para cadastrar hóspedes, gerenciar o ciclo de vida completo de uma reserva (criação, check-in, check-out, cancelamento) e calcular os custos de hospedagem de forma automatizada e precisa.
+
+O projeto foi desenvolvido com foco na **robustez dos processos de negócio**, garantindo a integridade dos dados e fornecendo um tratamento de erros claro e consistente.
+
+### ✅ Checklist de Requisitos e Correções
+
+Esta seção detalha o status de cada requisito solicitado e as principais correções e melhorias de arquitetura implementadas durante o desenvolvimento.
+
+#### Requisitos Funcionais
+
+| Requisito | Status | Implementação |
+| :--- | :--- | :--- |
+| Armazenar Hóspedes | ✅ **Concluído** | `Hospede.java`, `HospedeRepository` |
+| Armazenar Reservas | ✅ **Concluído** | `Reserva.java`, `ReservaRepository` |
+| Localizar Hóspedes (Nome, Doc, Tel) | ✅ **Concluído** | `HospedeServiceImpl` e `HospedeController` |
+| Localizar Hóspedes Hospedados | ✅ **Concluído** | `GET /api/reservas?status=CHECK_IN` |
+| Localizar com Reservas Pendentes | ✅ **Concluído** | `GET /api/reservas?status=PENDENTE` |
+| Realizar Check-in | ✅ **Concluído** | `POST /api/reservas/{id}/check-in` |
+| Realizar Check-out | ✅ **Concluído** | `POST /api/reservas/{id}/check-out` |
+| Calcular Diárias (Semana/Fim de Semana) | ✅ **Concluído** | Lógica em `ReservaServiceImpl` |
+| Cobrar Adicional de Veículo | ✅ **Concluído** | Lógica em `ReservaServiceImpl` |
+| Restringir Horário de Check-in | ✅ **Concluído** | Validação no `ReservaServiceImpl` |
+| Restringir Horário/Multa de Check-out | ✅ **Concluído** | Validação no `ReservaServiceImpl` |
+| Exibir Detalhes da Fatura | ✅ **Concluído** | `CheckoutResponseDTO` com `List<DetalheCustoDTO>` |
+
+#### Modelo de Dados e Atributos
+
+-   **`Hospede.java`**: `id`, `nome`, `documento`, `telefone`, `reservas`.
+-   **`Reserva.java`**: `id`, `hospede`, `dataEntrada`, `dataSaida`, `adicionalVeiculo`, `status`, `valorTotal`.
+-   **`StatusReserva.java` (Enum)**: `PENDENTE`, `CHECK_IN`, `CHECK_OUT`, `CANCELADA`.
+-   **DTOs**: `ReservaRequestDTO`, `CheckoutResponseDTO`, `DetalheCustoDTO`, `ErrorResponseDTO` para padronização de respostas.
+
+#### Correções e Melhorias de Arquitetura
+
+-   **Blindagem de Processos de Negócio:**
+    -   🛡️ **Exclusão de Hóspedes:** Implementada uma trava que impede a exclusão de um hóspede se ele possuir reservas ativas (`PENDENTE` ou `CHECK_IN`), garantindo a integridade referencial dos dados (`HospedeComReservaAtivaException`).
+    -   🛡️ **Criação de Reservas:** Adicionadas validações para impedir a criação de reservas com data de saída anterior à de entrada (`DataInvalidaException`) e para evitar a sobreposição de datas para o mesmo hóspede (`ReservaSobrepostaException`).
+
+-   **Evolução do Modelo de Dados:**
+    -   🧾 **Fatura Detalhada:** O DTO de resposta do check-out (`CheckoutResponseDTO`) foi refatorado. Em vez de uma simples lista de textos, ele agora utiliza uma lista de `DetalheCustoDTO`, fornecendo dados estruturados para o frontend e desacoplando a lógica de formatação.
+
+-   **Correções de Backend e Sincronização:**
+    -   🐞 **Serialização JSON:** Resolvido um problema de loop infinito (referência circular) entre as entidades `Hospede` e `Reserva` utilizando a anotação `@JsonIgnore`, garantindo que as respostas da API sejam geradas corretamente.
+    -   🐞 **Persistência de Enums:** Garantido que o `StatusReserva` seja salvo no banco de dados como `String` (`@Enumerated(EnumType.STRING)`) e que o schema seja recriado (`ddl-auto=create-drop`) para evitar erros de `CHECK constraint` com o PostgreSQL.
+    -   🐞 **Validação de DTOs:** Adicionada validação (`@NotNull`) nos DTOs de entrada para garantir que dados essenciais (como `idHospede`) não cheguem nulos ao serviço, retornando um erro `400 Bad Request` claro em vez de um `500 Internal Server Error`.
+    -   🐞 **Compatibilidade de Dependências:** Ajustada a versão do Spring Boot no `pom.xml` para `3.3.3` para garantir compatibilidade total com a biblioteca de documentação `springdoc-openapi`.
+
+-   **Centralização de Mensagens:**
+    -   🌐 Implementado um sistema de mensagens centralizado com `messages.properties` e o `MessageSource` do Spring. Todas as mensagens de erro e validação da aplicação agora vêm de uma única fonte, facilitando a manutenção e preparando o sistema para internacionalização (i18n).
 
 ### 🏗️ Arquitetura
 
@@ -44,101 +89,45 @@ graph TD
 -   **Controller**: Camada de entrada da API, responsável por expor os endpoints e receber as requisições.
 -   **Service**: Onde reside a lógica de negócio, regras e validações do sistema.
 -   **Repository**: Camada de acesso a dados, que utiliza Spring Data JPA para interagir com o banco de dados.
--   **Exception**: Handler global para tratamento centralizado de erros, garantindo respostas padronizadas.
--   **Config**: Configurações de CORS e injeção de beans (Clock).
-
-### ✔️ Checklist de Entidades e Atributos
-
-Este é o modelo de dados principal da aplicação.
-
-#### `Hospede.java`
-| Atributo | Tipo | Descrição |
-| :--- | :--- | :--- |
-| `id` | `Long` | Identificador único do hóspede. |
-| `nome` | `String` | Nome completo do hóspede. |
-| `documento` | `String` | Documento de identificação (único). |
-| `telefone` | `String` | Telefone de contato. |
-| `reservas`| `List<Reserva>` | Lista de todas as reservas associadas a este hóspede. |
-
-#### `Reserva.java`
-| Atributo | Tipo | Descrição |
-| :--- | :--- | :--- |
-| `id` | `Long` | Identificador único da reserva. |
-| `dataEntrada` | `LocalDateTime` | Data e hora exatas do check-in. |
-| `dataSaida` | `LocalDateTime` | Data e hora exatas do check-out. |
-| `adicionalVeiculo` | `boolean` | Indica se o hóspede utilizou a garagem. |
-| `valorTotal` | `BigDecimal` | Custo total final da hospedagem. |
-| `status` | `StatusReserva` | O estado atual da reserva. |
-| `hospede` | `Hospede` | O hóspede associado a esta reserva. |
-
-#### `StatusReserva.java` (Enum)
-| Valor | Descrição |
-| :--- | :--- |
-| `PENDENTE` | Reserva criada, aguardando a chegada do hóspede. |
-| `CONFIRMADA` | Status legado, pode ser usado para reservas pagas antecipadamente. |
-| `CHECK_IN` | O hóspede já está no hotel. |
-| `CHECK_OUT` | O hóspede finalizou a estadia e a fatura foi gerada. |
-| `CANCELADA` | A reserva foi cancelada antes do check-in. |
-
-### ✨ Funcionalidades e Regras de Negócio
-
--   ✅ **Gestão de Hóspedes**: CRUD completo para hóspedes, com busca por nome, documento ou telefone.
--   🏨 **Gestão de Reservas**: Criação e listagem de reservas com filtro por status.
--   🛡️ **Validações de Integridade**:
-    -   Não permite excluir um hóspede que possua reservas ativas (`CONFIRMADA` ou `CHECK_IN`).
-    -   Não permite criar uma reserva com data de saída anterior à de entrada.
-    -   Não permite que um mesmo hóspede tenha reservas com datas sobrepostas.
--   🕒 **Processo de Check-in**: Altera o status da reserva para `CHECK_IN` e registra a data de entrada exata.
--   💳 **Processo de Check-out**: Finaliza a estadia, calcula o custo total e gera um relatório detalhado e estruturado.
--   💰 **Cálculo de Custos**:
-    -   Diárias de **R$ 120,00** (dias de semana) e **R$ 180,00** (fins de semana).
-    -   Adicional de garagem de **R$ 15,00** (dias de semana) e **R$ 20,00** (fins de semana).
-    -   Aplicação de **multa de 50%** sobre o valor da última diária por check-out realizado após as 12:00.
 
 ### 💻 Tecnologias Utilizadas
 
-| Categoria | Tecnologia | Versão |
+| Categoria | Tecnologia | Versão/Padrão |
 | :--- | :--- | :--- |
-| **Linguagem** | ☕ Java | 17 |
-| **Framework** | 🌱 Spring Boot | 3.3.3 |
-| **API** | 🌐 Spring Web | - |
-| **Persistência** | 🗃️ Spring Data JPA & Hibernate | - |
-| **Banco de Dados** | 🐘 PostgreSQL | 13+ |
-| **Build** | 📦 Maven | 4.0.0 |
-| **Documentação** | 📖 Springdoc (Swagger) | 2.5.0 |
+| **Linguagem & Framework** | ☕ Java | 17 |
+| | 🌱 Spring Boot | 3.3.3 |
+| **Acesso a Dados** | 🐘 PostgreSQL | 13+ |
+| | 🗃️ Spring Data JPA | - |
+| **API & Web** | 🌐 Spring Web | - |
+| | 📖 Springdoc (Swagger) | 2.5.0 |
+| **Build & Utilitários** | 📦 Maven | 4.0.0 |
+| | 📄 Lombok | - |
+| **Validação** | 📝 Bean Validation | - |
 | **Testes** | 🧪 JUnit 5 & Mockito | - |
-| **Utilitários** | 📄 Lombok | - |
 
 ### 🚀 Endpoints da API
 
-#### Módulo de Hóspedes (`/api/hospedes`)
-| Método | Rota | Descrição |
+A seguir, a lista de endpoints disponíveis na aplicação.
+
+#### Módulo de Hóspedes
+
+| Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `POST` | `/` | Cria um novo hóspede. |
-| `GET` | `/` | Lista/Busca hóspedes por nome, documento ou telefone. |
-| `GET` | `/{id}` | Busca um hóspede por ID. |
-| `PUT` | `/{id}` | Atualiza um hóspede existente. |
-| `DELETE` | `/{id}` | Remove um hóspede. |
+| `POST` | `/api/hospedes` | Cria um novo hóspede. |
+| `GET` | `/api/hospedes` | Lista/Busca hóspedes por nome, documento ou telefone. |
+| `GET` | `/api/hospedes/{id}` | Busca um hóspede por ID. |
+| `PUT` | `/api/hospedes/{id}` | Atualiza um hóspede existente. |
+| `DELETE` | `/api/hospedes/{id}` | Remove um hóspede. |
 
-#### Módulo de Reservas (`/api/reservas`)
-| Método | Rota | Descrição |
+#### Módulo de Reservas
+
+| Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `POST` | `/` | Cria uma nova reserva. |
-| `GET` | `/` | Lista reservas, com filtro opcional por `status`. |
-| `POST` | `/{id}/check-in` | Realiza o check-in de uma reserva. |
-| `POST` | `/{id}/check-out` | Realiza o check-out e calcula os custos. |
-
-### 📈 Histórico de Melhorias e Correções
-
-Durante o desenvolvimento, diversos pontos foram refinados para garantir a robustez e a qualidade do sistema:
-
--   **Correção de Lógica de Negócio:** Ajustado o valor da diária de fim de semana para R$ 180,00, conforme os requisitos.
--   **Correção de Testes Unitários:** Refatorados os testes de `BigDecimal` para usar `compareTo`, evitando falhas por diferença de escala.
--   **Correção de Serialização JSON:** Resolvido um problema de loop infinito (`StackOverflowError`) na serialização de entidades com relacionamento bidirecional (`Hospede` <-> `Reserva`) através do uso de `@JsonIgnore`.
--   **Correção de Validação de Dados:** Adicionada validação (`@NotNull`) para o `idHospede` na criação de reservas, evitando `NullPointerException` e retornando um erro `400 Bad Request` claro para o cliente.
--   **Refatoração de Fatura:** A resposta do endpoint de check-out foi melhorada, passando de uma simples `List<String>` para uma lista de `DetalheCustoDTO`, fornecendo dados estruturados para o frontend.
--   **Blindagem de Processos:** Implementadas validações para impedir a exclusão de hóspedes com reservas ativas e a criação de reservas com datas sobrepostas ou inválidas.
--   **Centralização de Mensagens:** Todas as mensagens de erro e validação foram movidas para um arquivo `messages.properties`, preparando o sistema para internacionalização (i18n) e facilitando a manutenção.
+| `POST` | `/api/reservas` | Cria uma nova reserva. |
+| `POST` | `/api/reservas/{id}/check-in` | Realiza o check-in de uma reserva. |
+| `POST` | `/api/reservas/{id}/check-out` | Realiza o check-out e calcula os custos. |
+| `GET` | `/api/reservas` | Lista reservas, com filtro opcional por status. |
+| `DELETE` | `/api/reservas/{id}` | Cancela uma reserva com status `PENDENTE`. |
 
 ### ⚙️ Como Executar o Projeto
 
@@ -146,30 +135,22 @@ Durante o desenvolvimento, diversos pontos foram refinados para garantir a robus
     -   Java Development Kit (JDK) v17 ou superior.
     -   Apache Maven v3.8 ou superior.
     -   PostgreSQL v13 ou superior.
+    -   Uma IDE de sua preferência (ex: IntelliJ IDEA, VS Code).
 
-2.  **Clone o repositório:**
-    ```sh
-    git clone https://github.com/seu-usuario/belavista-backend.git
-    cd belavista-backend
-    ```
-3.  **Configure o Banco de Dados:**
+2.  **Configuração do Banco de Dados:**
     -   Certifique-se de que o PostgreSQL está instalado e em execução.
     -   Crie um novo banco de dados: `CREATE DATABASE belavista;`
-    -   Ajuste as credenciais no arquivo `src/main/resources/application.properties` se necessário.
+    -   Ajuste as credenciais (`username`, `password`) no arquivo `src/main/resources/application.properties`.
 
-4.  **Execute a aplicação:**
-    ```sh
-    mvn spring-boot:run
-    ```
-
-A aplicação estará disponível em `http://localhost:8080`.
+3.  **Execução:**
+    -   Clone o repositório.
+    -   Abra um terminal na raiz do projeto.
+    -   Execute o comando: `mvn clean install` para compilar e rodar os testes.
+    -   Inicie a aplicação: `mvn spring-boot:run`
+    -   A API estará disponível em `http://localhost:8080`.
 
 ### 📖 Documentação Swagger
 
-Para explorar e testar todos os endpoints de forma interativa, acesse a documentação do Swagger UI no seu navegador após iniciar a aplicação:
+Para explorar e testar os endpoints de forma interativa, acesse a documentação do Swagger UI no seu navegador após iniciar a aplicação:
 
-**URL:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
-
-### 👨‍💻 Autor
-
-Desenvolvido com ❤️ por **Daniel Silva**.
+-   **URL:** [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)

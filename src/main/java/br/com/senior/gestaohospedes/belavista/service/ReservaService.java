@@ -16,4 +16,6 @@ public interface ReservaService {
     CheckoutResponseDTO realizarCheckOut(Long idReserva);
 
     List<Reserva> buscarReservas(StatusReserva status);
+
+    void cancelarReserva(Long idReserva);
 }

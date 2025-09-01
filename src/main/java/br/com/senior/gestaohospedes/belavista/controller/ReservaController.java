@@ -7,6 +7,7 @@ import br.com.senior.gestaohospedes.belavista.entity.StatusReserva;
 import br.com.senior.gestaohospedes.belavista.service.ReservaService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -52,5 +53,12 @@ public class ReservaController {
         List<Reserva> reservas = reservaService.buscarReservas(status);
         log.debug("Total de reservas encontradas: {}", reservas.size());
         return reservas;
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void cancelarReserva(@PathVariable Long id) {
+        log.info("Requisição para cancelar a reserva com ID: {}", id);
+        reservaService.cancelarReserva(id);
     }
 }
