@@ -1,14 +1,12 @@
 package br.com.senior.gestaohospedes.belavista.service.impl;
 
 import br.com.senior.gestaohospedes.belavista.dto.CheckoutResponseDTO;
+import br.com.senior.gestaohospedes.belavista.dto.DetalheCustoDTO;
 import br.com.senior.gestaohospedes.belavista.dto.ReservaRequestDTO;
 import br.com.senior.gestaohospedes.belavista.entity.Hospede;
 import br.com.senior.gestaohospedes.belavista.entity.Reserva;
 import br.com.senior.gestaohospedes.belavista.entity.StatusReserva;
-import br.com.senior.gestaohospedes.belavista.exception.CheckInForaDoHorarioException;
-import br.com.senior.gestaohospedes.belavista.exception.HospedeNaoEncontradoException;
-import br.com.senior.gestaohospedes.belavista.exception.ReservaNaoEncontradaException;
-import br.com.senior.gestaohospedes.belavista.exception.ReservaStatusException;
+import br.com.senior.gestaohospedes.belavista.exception.*;
 import br.com.senior.gestaohospedes.belavista.repository.HospedeRepository;
 import br.com.senior.gestaohospedes.belavista.repository.ReservaRepository;
 import br.com.senior.gestaohospedes.belavista.service.ReservaService;
@@ -44,11 +42,28 @@ public class ReservaServiceImpl implements ReservaService {
     @Override
     public Reserva criarReserva(ReservaRequestDTO dto) {
         log.debug("Iniciando processo para criar nova reserva para o hóspede ID: {}", dto.getIdHospede());
+
+        if (dto.getDataSaidaPrevista().isBefore(dto.getDataEntrada())) {
+            log.warn("Tentativa de criar reserva com data de saída anterior à de entrada. Entrada: {}, Saída: {}", dto.getDataEntrada(), dto.getDataSaidaPrevista());
+            throw new DataInvalidaException();
+        }
+
         Hospede hospede = hospedeRepository.findById(dto.getIdHospede())
                 .orElseThrow(() -> {
                     log.warn("Hóspede não encontrado para o ID: {}", dto.getIdHospede());
                     return new HospedeNaoEncontradoException(dto.getIdHospede());
                 });
+
+        List<StatusReserva> statusesAtivos = List.of(StatusReserva.PENDENTE, StatusReserva.CHECK_IN);
+        List<Reserva> reservasAtivas = reservaRepository.findAllByHospedeIdAndStatusIn(hospede.getId(), statusesAtivos);
+        for (Reserva existente : reservasAtivas) {
+            boolean sobrepoe = dto.getDataEntrada().isBefore(existente.getDataSaida()) &&
+                               dto.getDataSaidaPrevista().isAfter(existente.getDataEntrada());
+            if (sobrepoe) {
+                log.warn("Tentativa de criar reserva sobreposta para o hóspede ID: {}. Período solicitado: {} a {}", dto.getIdHospede(), dto.getDataEntrada(), dto.getDataSaidaPrevista());
+                throw new ReservaSobrepostaException();
+            }
+        }
 
         Reserva reserva = new Reserva();
         reserva.setHospede(hospede);
@@ -124,9 +139,29 @@ public class ReservaServiceImpl implements ReservaService {
         return reservaRepository.findAll();
     }
 
+    @Override
+    public void cancelarReserva(Long idReserva) {
+        log.debug("Iniciando processo de cancelamento para a reserva ID: {}", idReserva);
+        Reserva reserva = reservaRepository.findById(idReserva)
+                .orElseThrow(() -> {
+                    log.warn("Reserva não encontrada para o ID: {}", idReserva);
+                    return new ReservaNaoEncontradaException(idReserva);
+                });
+
+        if (reserva.getStatus() != StatusReserva.PENDENTE) {
+            log.warn("Tentativa de cancelamento inválida. Status da reserva é {} mas deveria ser PENDENTE.", reserva.getStatus());
+            throw new CancelamentoInvalidoException();
+        }
+
+        reserva.setStatus(StatusReserva.CANCELADA);
+        log.debug("Atualizando reserva para o status CANCELADA: {}", reserva);
+        reservaRepository.save(reserva);
+        log.info("Reserva ID {} cancelada com sucesso.", idReserva);
+    }
+
     private CheckoutResponseDTO calcularCustoTotal(Reserva reserva) {
         log.debug("Iniciando cálculo de custo total para a reserva ID: {}", reserva.getId());
-        List<String> detalhesDiarias = new ArrayList<>();
+        List<DetalheCustoDTO> detalhes = new ArrayList<>();
         BigDecimal valorTotalDiarias = BigDecimal.ZERO;
         BigDecimal valorTotalEstacionamento = BigDecimal.ZERO;
         BigDecimal valorMultaAtraso = BigDecimal.ZERO;
@@ -136,14 +171,17 @@ public class ReservaServiceImpl implements ReservaService {
 
         while (!dia.isAfter(dataSaida)) {
             DayOfWeek diaDaSemana = dia.getDayOfWeek();
-            BigDecimal diaria = (diaDaSemana == DayOfWeek.SATURDAY || diaDaSemana == DayOfWeek.SUNDAY) ? DIARIA_FIM_DE_SEMANA : DIARIA_SEMANA;
+            boolean isFimDeSemana = (diaDaSemana == DayOfWeek.SATURDAY || diaDaSemana == DayOfWeek.SUNDAY);
+
+            BigDecimal diaria = isFimDeSemana ? DIARIA_FIM_DE_SEMANA : DIARIA_SEMANA;
             valorTotalDiarias = valorTotalDiarias.add(diaria);
-            detalhesDiarias.add("Diária " + dia + ": R$" + diaria);
+            detalhes.add(new DetalheCustoDTO(isFimDeSemana ? "Diária - Fim de Semana" : "Diária - Dia de Semana", dia, diaria));
             log.trace("Custo da diária para o dia {}: {}", dia, diaria);
 
             if (reserva.isAdicionalVeiculo()) {
-                BigDecimal estacionamento = (diaDaSemana == DayOfWeek.SATURDAY || diaDaSemana == DayOfWeek.SUNDAY) ? ESTACIONAMENTO_FIM_DE_SEMANA : ESTACIONAMENTO_SEMANA;
+                BigDecimal estacionamento = isFimDeSemana ? ESTACIONAMENTO_FIM_DE_SEMANA : ESTACIONAMENTO_SEMANA;
                 valorTotalEstacionamento = valorTotalEstacionamento.add(estacionamento);
+                detalhes.add(new DetalheCustoDTO(isFimDeSemana ? "Estacionamento - Fim de Semana" : "Estacionamento - Dia de Semana", dia, estacionamento));
                 log.trace("Custo do estacionamento para o dia {}: {}", dia, estacionamento);
             }
             dia = dia.plusDays(1);
@@ -151,8 +189,10 @@ public class ReservaServiceImpl implements ReservaService {
 
         if (reserva.getDataSaida().toLocalTime().isAfter(HORA_CHECKOUT)) {
             DayOfWeek diaDaSemana = reserva.getDataSaida().toLocalDate().getDayOfWeek();
-            BigDecimal ultimaDiaria = (diaDaSemana == DayOfWeek.SATURDAY || diaDaSemana == DayOfWeek.SUNDAY) ? DIARIA_FIM_DE_SEMANA : DIARIA_SEMANA;
+            boolean isFimDeSemana = (diaDaSemana == DayOfWeek.SATURDAY || diaDaSemana == DayOfWeek.SUNDAY);
+            BigDecimal ultimaDiaria = isFimDeSemana ? DIARIA_FIM_DE_SEMANA : DIARIA_SEMANA;
             valorMultaAtraso = ultimaDiaria.multiply(new BigDecimal("0.5"));
+            detalhes.add(new DetalheCustoDTO("Multa por checkout tardio", reserva.getDataSaida().toLocalDate(), valorMultaAtraso));
             log.debug("Multa por checkout tardio aplicada. Valor: {}", valorMultaAtraso);
         }
 
@@ -161,7 +201,8 @@ public class ReservaServiceImpl implements ReservaService {
                 reserva.getId(), valorTotalDiarias, valorTotalEstacionamento, valorMultaAtraso, valorTotalGeral);
 
         CheckoutResponseDTO dto = new CheckoutResponseDTO();
-        dto.setDetalhesDiarias(detalhesDiarias);
+        dto.setDataCheckout(reserva.getDataSaida());
+        dto.setDetalhes(detalhes);
         dto.setValorTotalDiarias(valorTotalDiarias);
         dto.setValorTotalEstacionamento(valorTotalEstacionamento);
         dto.setValorMultaAtraso(valorMultaAtraso);

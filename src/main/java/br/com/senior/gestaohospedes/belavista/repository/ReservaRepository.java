@@ -12,4 +12,8 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     List<Reserva> findByStatus(StatusReserva status);
 
     Optional<Reserva> findByHospedeIdAndStatus(Long hospedeId, StatusReserva status);
+
+    boolean existsByHospedeIdAndStatusIn(Long hospedeId, List<StatusReserva> statuses);
+
+    List<Reserva> findAllByHospedeIdAndStatusIn(Long hospedeId, List<StatusReserva> statuses);
 }
