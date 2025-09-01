@@ -69,4 +69,3 @@ Este documento serve como um checklist de todos os arquivos e classes criados e 
 ### 📄 Documentação
 
 - [X] `README.md`: Documento principal do projeto, com visão geral, tecnologias, funcionalidades e guia de execução.
-- [X] `VISAO_GERAL_ARQUITETURA.md`: Documento detalhado da arquitetura, endpoints e exemplos de uso da API.
