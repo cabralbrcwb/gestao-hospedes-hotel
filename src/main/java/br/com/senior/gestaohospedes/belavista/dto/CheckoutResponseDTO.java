@@ -8,7 +8,7 @@ import java.util.List;
 @Data
 public class CheckoutResponseDTO {
 
-    private List<String> detalhesDiarias;
+    private List<DetalheCustoDTO> detalhes;
     private BigDecimal valorTotalDiarias;
     private BigDecimal valorTotalEstacionamento;
     private BigDecimal valorMultaAtraso;

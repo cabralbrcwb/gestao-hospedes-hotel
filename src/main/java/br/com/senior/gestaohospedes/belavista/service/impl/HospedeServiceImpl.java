@@ -1,9 +1,12 @@
 package br.com.senior.gestaohospedes.belavista.service.impl;
 
 import br.com.senior.gestaohospedes.belavista.entity.Hospede;
+import br.com.senior.gestaohospedes.belavista.entity.StatusReserva;
 import br.com.senior.gestaohospedes.belavista.exception.DocumentoDuplicadoException;
+import br.com.senior.gestaohospedes.belavista.exception.HospedeComReservaAtivaException;
 import br.com.senior.gestaohospedes.belavista.exception.HospedeNaoEncontradoException;
 import br.com.senior.gestaohospedes.belavista.repository.HospedeRepository;
+import br.com.senior.gestaohospedes.belavista.repository.ReservaRepository;
 import br.com.senior.gestaohospedes.belavista.service.HospedeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,9 +19,11 @@ import java.util.List;
 public class HospedeServiceImpl implements HospedeService {
 
     private final HospedeRepository hospedeRepository;
+    private final ReservaRepository reservaRepository;
 
-    public HospedeServiceImpl(HospedeRepository hospedeRepository) {
+    public HospedeServiceImpl(HospedeRepository hospedeRepository, ReservaRepository reservaRepository) {
         this.hospedeRepository = hospedeRepository;
+        this.reservaRepository = reservaRepository;
     }
 
     @Override
@@ -77,7 +82,14 @@ public class HospedeServiceImpl implements HospedeService {
     public void deletarHospede(Long id) {
         log.debug("Iniciando exclusão do hóspede de ID: {}", id);
         Hospede hospede = buscarHospedePorId(id);
+
+        boolean temReservasAtivas = reservaRepository.existsByHospedeIdAndStatusIn(id, List.of(StatusReserva.PENDENTE, StatusReserva.CHECK_IN));
+        if (temReservasAtivas) {
+            log.warn("Tentativa de exclusão de hóspede com reservas ativas. ID do Hóspede: {}", id);
+            throw new HospedeComReservaAtivaException();
+        }
+
         hospedeRepository.delete(hospede);
-        log.debug("Hóspede de ID {} excluído do banco de dados.", id);
+        log.info("Hóspede de ID {} excluído com sucesso.", id);
     }
 }
