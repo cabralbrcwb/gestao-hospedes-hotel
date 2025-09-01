@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -72,8 +73,20 @@ public class HospedeServiceImpl implements HospedeService {
     public Hospede atualizarHospede(Long id, Hospede hospedeAtualizado) {
         log.debug("Iniciando atualização para o hóspede de ID: {}", id);
         Hospede hospedeExistente = buscarHospedePorId(id);
+
+        // Verifica se o documento foi alterado e se o novo já existe para outro hóspede
+        if (!hospedeExistente.getDocumento().equals(hospedeAtualizado.getDocumento())) {
+            Optional<Hospede> hospedeComNovoDocumento = hospedeRepository.findByDocumento(hospedeAtualizado.getDocumento());
+            if (hospedeComNovoDocumento.isPresent() && !hospedeComNovoDocumento.get().getId().equals(id)) {
+                log.warn("Tentativa de atualizar para um documento que já pertence a outro hóspede: {}", hospedeAtualizado.getDocumento());
+                throw new DocumentoDuplicadoException(hospedeAtualizado.getDocumento());
+            }
+            hospedeExistente.setDocumento(hospedeAtualizado.getDocumento());
+        }
+
         hospedeExistente.setNome(hospedeAtualizado.getNome());
         hospedeExistente.setTelefone(hospedeAtualizado.getTelefone());
+        
         log.debug("Salvando dados atualizados para o hóspede de ID: {}", id);
         return hospedeRepository.save(hospedeExistente);
     }
@@ -83,8 +96,7 @@ public class HospedeServiceImpl implements HospedeService {
         log.debug("Iniciando exclusão do hóspede de ID: {}", id);
         Hospede hospede = buscarHospedePorId(id);
 
-        // CORREÇÃO: Alterado de PENDENTE para CONFIRMADA para alinhar com a nova regra de negócio.
-        boolean temReservasAtivas = reservaRepository.existsByHospedeIdAndStatusIn(id, List.of(StatusReserva.CONFIRMADA, StatusReserva.CHECK_IN));
+        boolean temReservasAtivas = reservaRepository.existsByHospedeIdAndStatusIn(id, List.of(StatusReserva.PENDENTE, StatusReserva.CHECK_IN));
         if (temReservasAtivas) {
             log.warn("Tentativa de exclusão de hóspede com reservas ativas. ID do Hóspede: {}", id);
             throw new HospedeComReservaAtivaException();
