@@ -1,5 +1,6 @@
 package br.com.senior.gestaohospedes.belavista.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -27,5 +28,6 @@ public class Hospede {
     private String telefone;
 
     @OneToMany(mappedBy = "hospede")
+    @JsonIgnore // Garante que a lista de reservas não será serializada, quebrando o loop.
     private List<Reserva> reservas;
 }

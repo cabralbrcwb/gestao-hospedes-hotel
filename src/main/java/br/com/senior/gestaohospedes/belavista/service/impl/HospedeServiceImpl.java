@@ -83,7 +83,8 @@ public class HospedeServiceImpl implements HospedeService {
         log.debug("Iniciando exclusão do hóspede de ID: {}", id);
         Hospede hospede = buscarHospedePorId(id);
 
-        boolean temReservasAtivas = reservaRepository.existsByHospedeIdAndStatusIn(id, List.of(StatusReserva.PENDENTE, StatusReserva.CHECK_IN));
+        // CORREÇÃO: Alterado de PENDENTE para CONFIRMADA para alinhar com a nova regra de negócio.
+        boolean temReservasAtivas = reservaRepository.existsByHospedeIdAndStatusIn(id, List.of(StatusReserva.CONFIRMADA, StatusReserva.CHECK_IN));
         if (temReservasAtivas) {
             log.warn("Tentativa de exclusão de hóspede com reservas ativas. ID do Hóspede: {}", id);
             throw new HospedeComReservaAtivaException();

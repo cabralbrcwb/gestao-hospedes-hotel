@@ -18,6 +18,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -48,13 +49,20 @@ class ReservaServiceImplTest {
 
     @Test
     void criarReserva_ComHospedeExistente_DeveCriarReserva() {
+        // Cenário
         ReservaRequestDTO dto = new ReservaRequestDTO();
         dto.setIdHospede(1L);
+        dto.setDataEntrada(LocalDateTime.of(2025, 10, 10, 14, 0));
+        dto.setDataSaidaPrevista(LocalDateTime.of(2025, 10, 12, 12, 0));
+
         when(hospedeRepository.findById(1L)).thenReturn(Optional.of(new Hospede()));
+        when(reservaRepository.findAllByHospedeIdAndStatusIn(any(), any())).thenReturn(Collections.emptyList()); // Simula que não há reservas sobrepostas
         when(reservaRepository.save(any(Reserva.class))).thenAnswer(i -> i.getArguments()[0]);
 
+        // Ação
         Reserva reserva = reservaService.criarReserva(dto);
 
+        // Verificação
         assertNotNull(reserva);
         assertEquals(StatusReserva.PENDENTE, reserva.getStatus());
     }
