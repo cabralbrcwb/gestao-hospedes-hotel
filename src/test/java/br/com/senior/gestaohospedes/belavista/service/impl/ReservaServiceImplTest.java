@@ -56,7 +56,7 @@ class ReservaServiceImplTest {
         dto.setDataSaidaPrevista(LocalDateTime.of(2025, 10, 12, 12, 0));
 
         when(hospedeRepository.findById(1L)).thenReturn(Optional.of(new Hospede()));
-        when(reservaRepository.findAllByHospedeIdAndStatusIn(any(), any())).thenReturn(Collections.emptyList()); // Simula que não há reservas sobrepostas
+        when(reservaRepository.findAllByStatusIn(any())).thenReturn(Collections.emptyList()); // Simula que não há reservas sobrepostas
         when(reservaRepository.save(any(Reserva.class))).thenAnswer(i -> i.getArguments()[0]);
 
         // Ação

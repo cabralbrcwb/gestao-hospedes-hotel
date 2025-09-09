@@ -12,8 +12,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class DetalheCustoDTO {
 
-    private String descricao;
-    private LocalDate data;
-    private BigDecimal valor;
+  private String descricao;
+  private LocalDate data;
+  private BigDecimal valor;
 
 }

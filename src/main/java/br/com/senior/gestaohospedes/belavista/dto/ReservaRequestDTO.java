@@ -10,10 +10,10 @@ import java.time.LocalDateTime;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ReservaRequestDTO {
 
-    @NotNull(message = "O ID do hóspede é obrigatório.")
-    private Long idHospede;
+  @NotNull(message = "O ID do hóspede é obrigatório.")
+  private Long idHospede;
 
-    private LocalDateTime dataEntrada;
-    private LocalDateTime dataSaidaPrevista;
-    private boolean adicionalVeiculo;
+  private LocalDateTime dataEntrada;
+  private LocalDateTime dataSaidaPrevista;
+  private boolean adicionalVeiculo;
 }

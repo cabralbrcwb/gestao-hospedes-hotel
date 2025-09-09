@@ -9,10 +9,10 @@ import java.util.List;
 @Data
 public class CheckoutResponseDTO {
 
-    private LocalDateTime dataCheckout;
-    private List<DetalheCustoDTO> detalhes;
-    private BigDecimal valorTotalDiarias;
-    private BigDecimal valorTotalEstacionamento;
-    private BigDecimal valorMultaAtraso;
-    private BigDecimal valorTotalGeral;
+  private LocalDateTime dataCheckout;
+  private List<DetalheCustoDTO> detalhes;
+  private BigDecimal valorTotalDiarias;
+  private BigDecimal valorTotalEstacionamento;
+  private BigDecimal valorMultaAtraso;
+  private BigDecimal valorTotalGeral;
 }

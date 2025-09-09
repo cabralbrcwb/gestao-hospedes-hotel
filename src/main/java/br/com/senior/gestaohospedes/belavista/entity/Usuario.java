@@ -29,28 +29,24 @@ public class Usuario implements UserDetails {
 
   @Column(nullable = false)
   private String senha;
-/**
-   * Relação muitos-para-muitos entre o usuário e seus perfis.
-   * Usa carregamento EAGER para compor as authorities no Spring Security.
-   * Mapeada pela tabela de junção `usuario_perfis` (`usuario_id`, `perfil_id`).
+  /**
+   * Relação muitos-para-muitos entre o usuário e seus perfis. Usa carregamento EAGER para compor as
+   * authorities no Spring Security. Mapeada pela tabela de junção `usuario_perfis` (`usuario_id`,
+   * `perfil_id`).
    */
   @ManyToMany(fetch = FetchType.EAGER)
-  @JoinTable(
-      name = "usuario_perfis",
-      joinColumns = @JoinColumn(name = "usuario_id"),
-      inverseJoinColumns = @JoinColumn(name = "perfil_id")
-  )
+  @JoinTable(name = "usuario_perfis", joinColumns = @JoinColumn(name = "usuario_id"), inverseJoinColumns = @JoinColumn(name = "perfil_id"))
   private Set<Perfil> perfis;
 
   /**
-   * O método converte os perfis do usuário em authorities do Spring Security, retornando a lista usada na autorização.
-   * Cada Perfil vira um SimpleGrantedAuthority com o nome do perfil.
+   * O método converte os perfis do usuário em authorities do Spring Security, retornando a lista
+   * usada na autorização. Cada Perfil vira um SimpleGrantedAuthority com o nome do perfil.
+   *
    * @return authorities do Spring Security
    */
   @Override
   public Collection<? extends GrantedAuthority> getAuthorities() {
-    return perfis.stream()
-        .map(perfil -> new SimpleGrantedAuthority(perfil.getNome()))
+    return perfis.stream().map(perfil -> new SimpleGrantedAuthority(perfil.getNome()))
         .collect(Collectors.toList());
   }
 

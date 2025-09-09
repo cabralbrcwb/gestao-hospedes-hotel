@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -20,42 +21,41 @@ import java.io.IOException;
 @Component
 public class SecurityFilter extends OncePerRequestFilter {
 
-    @Value("${api.security.token.secret}")
-    private String secret;
+  @Value("${api.security.token.secret}")
+  private String secret;
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+  @Autowired
+  private UsuarioRepository usuarioRepository;
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        var tokenJWT = recuperarToken(request);
+  @Override
+  protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+      @NonNull FilterChain filterChain) throws ServletException, IOException {
+    var tokenJWT = recuperarToken(request);
 
-        if (tokenJWT != null) {
-            try {
-                Algorithm algorithm = Algorithm.HMAC256(secret);
-                var subject = JWT.require(algorithm)
-                        .withIssuer("API Bela Vista")
-                        .build()
-                        .verify(tokenJWT)
-                        .getSubject();
+    if (tokenJWT != null) {
+      try {
+        Algorithm algorithm = Algorithm.HMAC256(secret);
+        var subject = JWT.require(algorithm).withIssuer("API Bela Vista").build().verify(tokenJWT)
+            .getSubject();
 
-                var usuario = usuarioRepository.findByLogin(subject).orElseThrow();
-                var authentication = new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+        var usuario = usuarioRepository.findByLogin(subject).orElseThrow();
+        var authentication = new UsernamePasswordAuthenticationToken(usuario, null,
+            usuario.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            } catch (JWTVerificationException exception) {
-                // Token inválido, não faz nada, o Spring Security tratará como não autenticado.
-            }
-        }
-        
-        filterChain.doFilter(request, response);
+      } catch (JWTVerificationException exception) {
+        // Token inválido, não faz nada, o Spring Security tratará como não autenticado.
+      }
     }
 
-    private String recuperarToken(HttpServletRequest request) {
-        var authorizationHeader = request.getHeader("Authorization");
-        if (authorizationHeader != null) {
-            return authorizationHeader.replace("Bearer ", "").trim();
-        }
-        return null;
+    filterChain.doFilter(request, response);
+  }
+
+  private String recuperarToken(HttpServletRequest request) {
+    var authorizationHeader = request.getHeader("Authorization");
+    if (authorizationHeader != null) {
+      return authorizationHeader.replace("Bearer ", "").trim();
     }
+    return null;
+  }
 }

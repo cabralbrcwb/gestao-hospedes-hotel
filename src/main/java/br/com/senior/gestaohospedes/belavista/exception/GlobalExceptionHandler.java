@@ -1,81 +1,86 @@
 package br.com.senior.gestaohospedes.belavista.exception;
 
 import br.com.senior.gestaohospedes.belavista.dto.ErrorResponseDTO;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
-import java.util.Locale;
-import java.util.stream.Collectors;
 /**
- * Centraliza o tratamento de exceções.
- * <p>
- * Anotada com {@link ControllerAdvice}, esta classe intercepta exceções lançadas
- * pelos controllers e as transforma em respostas HTTP padronizadas
- * no formato {@link ErrorResponseDTO}. Evita a dispersão de blocos try-catch
- * e garante uma comunicação de erro consistente para os clientes da API.
+ * Manipulador global de exceções para a aplicação.
+ * Captura exceções específicas e as converte em respostas HTTP apropriadas.
  */
-@Slf4j
-@ControllerAdvice
+@RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
 
-    @Autowired
-    private MessageSource messageSource;
+  private final MessageSource messageSource;
 
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponseDTO> handleBusinessException(BusinessException ex, WebRequest request, Locale locale) {
-        ResponseStatus responseStatus = ex.getClass().getAnnotation(ResponseStatus.class);
-        HttpStatus status = (responseStatus != null) ? responseStatus.value() : HttpStatus.INTERNAL_SERVER_ERROR;
+  private String getMessage(BusinessException ex) {
+    return messageSource.getMessage(ex.getMessageKey(), ex.getArgs(), LocaleContextHolder.getLocale());
+  }
 
-        String message = messageSource.getMessage(ex.getMessageKey(), ex.getArgs(), locale);
-        log.warn("Exceção de negócio capturada: Chave='{}', Argumentos='{}', Mensagem='{}'", ex.getMessageKey(), ex.getArgs(), message);
+  private ErrorResponseDTO createErrorResponse(HttpStatus status, String message, WebRequest request) {
+    String description = request.getDescription(false);
+    String path = description != null && description.startsWith("uri=") ? description.substring(4) : description;
+    return new ErrorResponseDTO(status.value(), status.getReasonPhrase(), message, path);
+  }
 
-        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
-                status.value(),
-                status.getReasonPhrase(),
-                message,
-                request.getDescription(false).replace("uri=", "")
-        );
-        return new ResponseEntity<>(errorResponse, status);
-    }
+  @ExceptionHandler(HospedeComReservaAtivaException.class)
+  public ResponseEntity<ErrorResponseDTO> handleHospedeComReservaAtiva(
+      HospedeComReservaAtivaException ex, WebRequest request) {
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .body(createErrorResponse(HttpStatus.CONFLICT, getMessage(ex), request));
+  }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponseDTO> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request, Locale locale) {
-        String errors = ex.getBindingResult().getFieldErrors().stream()
-                .map(error -> error.getField() + ": " + messageSource.getMessage(error, locale))
-                .collect(Collectors.joining(", "));
+  @ExceptionHandler(DocumentoDuplicadoException.class)
+  public ResponseEntity<ErrorResponseDTO> handleDocumentoDuplicado(DocumentoDuplicadoException ex, WebRequest request) {
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .body(createErrorResponse(HttpStatus.CONFLICT, getMessage(ex), request));
+  }
 
-        log.warn("Erro de validação capturado: {}", errors);
+  @ExceptionHandler(ReservaSobrepostaException.class)
+  public ResponseEntity<ErrorResponseDTO> handleReservaSobreposta(ReservaSobrepostaException ex, WebRequest request) {
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .body(createErrorResponse(HttpStatus.CONFLICT, getMessage(ex), request));
+  }
 
-        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
-                HttpStatus.BAD_REQUEST.value(),
-                "Validation Error",
-                "Erro de validação: " + errors,
-                request.getDescription(false).replace("uri=", "")
-        );
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
+  @ExceptionHandler(ReservaStatusException.class)
+  public ResponseEntity<ErrorResponseDTO> handleReservaStatus(ReservaStatusException ex, WebRequest request) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(createErrorResponse(HttpStatus.BAD_REQUEST, getMessage(ex), request));
+  }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponseDTO> handleGlobalException(Exception ex, WebRequest request, Locale locale) {
-        // Este é o log mais importante para o nosso problema atual.
-        log.error("Erro inesperado capturado pelo GlobalExceptionHandler. Causa: ", ex);
+  @ExceptionHandler(CheckInForaDoHorarioException.class)
+  public ResponseEntity<ErrorResponseDTO> handleCheckInForaDoHorario(
+      CheckInForaDoHorarioException ex, WebRequest request) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(createErrorResponse(HttpStatus.BAD_REQUEST, getMessage(ex), request));
+  }
 
-        String message = messageSource.getMessage("error.server.internal", null, locale);
+  @ExceptionHandler(DataInvalidaException.class)
+  public ResponseEntity<ErrorResponseDTO> handleDataInvalida(DataInvalidaException ex, WebRequest request) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(createErrorResponse(HttpStatus.BAD_REQUEST, getMessage(ex), request));
+  }
 
-        ErrorResponseDTO errorResponse = new ErrorResponseDTO(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-                message,
-                request.getDescription(false).replace("uri=", "")
-        );
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+  @ExceptionHandler(CancelamentoInvalidoException.class)
+  public ResponseEntity<ErrorResponseDTO> handleCancelamentoInvalido(
+      CancelamentoInvalidoException ex, WebRequest request) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(createErrorResponse(HttpStatus.BAD_REQUEST, getMessage(ex), request));
+  }
+
+  @ExceptionHandler(EntityNotFoundException.class)
+  public ResponseEntity<ErrorResponseDTO> handleEntityNotFound(EntityNotFoundException ex, WebRequest request) {
+    String message = messageSource.getMessage("entity.not.found", null, LocaleContextHolder.getLocale());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .body(createErrorResponse(HttpStatus.NOT_FOUND, message, request));
+  }
+
 }

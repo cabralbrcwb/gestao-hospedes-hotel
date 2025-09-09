@@ -4,12 +4,11 @@ import br.com.senior.gestaohospedes.belavista.entity.Perfil;
 import br.com.senior.gestaohospedes.belavista.entity.Usuario;
 import br.com.senior.gestaohospedes.belavista.repository.PerfilRepository;
 import br.com.senior.gestaohospedes.belavista.repository.UsuarioRepository;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-
-import java.util.Set;
 
 @Component
 @Slf4j
@@ -19,14 +18,15 @@ public class DataInitializer implements CommandLineRunner {
   private final PerfilRepository perfilRepository;
   private final PasswordEncoder passwordEncoder;
 
-  public DataInitializer(UsuarioRepository usuarioRepository, PerfilRepository perfilRepository, PasswordEncoder passwordEncoder) {
+  public DataInitializer(UsuarioRepository usuarioRepository, PerfilRepository perfilRepository,
+      PasswordEncoder passwordEncoder) {
     this.usuarioRepository = usuarioRepository;
     this.perfilRepository = perfilRepository;
     this.passwordEncoder = passwordEncoder;
   }
 
   @Override
-  public void run(String... args) throws Exception {
+  public void run(String... args) {
     log.info("Iniciando verificação de dados iniciais...");
 
     // 1. Cria o perfil de ATENDENTE se ele não existir

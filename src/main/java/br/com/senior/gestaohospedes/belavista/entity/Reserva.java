@@ -10,22 +10,22 @@ import java.time.LocalDateTime;
 @Data
 public class Reserva {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    private LocalDateTime dataEntrada;
+  private LocalDateTime dataEntrada;
 
-    private LocalDateTime dataSaida;
+  private LocalDateTime dataSaida;
 
-    private boolean adicionalVeiculo;
+  private boolean adicionalVeiculo;
 
-    private BigDecimal valorTotal;
+  private BigDecimal valorTotal;
 
-    @Enumerated(EnumType.STRING)
-    private StatusReserva status;
+  @Enumerated(EnumType.STRING)
+  private StatusReserva status;
 
-    @ManyToOne
-    @JoinColumn(name = "hospede_id")
-    private Hospede hospede;
+  @ManyToOne
+  @JoinColumn(name = "hospede_id")
+  private Hospede hospede;
 }
