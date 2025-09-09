@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class ReservaNaoEncontradaException extends BusinessException {
 
-    public ReservaNaoEncontradaException(Long id) {
-        super("error.reserva.notFound", id);
-    }
+  public ReservaNaoEncontradaException(Long id) {
+    super("error.reserva.notFound", id);
+  }
 }

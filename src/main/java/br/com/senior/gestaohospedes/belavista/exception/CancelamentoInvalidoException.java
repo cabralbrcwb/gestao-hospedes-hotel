@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 public class CancelamentoInvalidoException extends BusinessException {
 
-    public CancelamentoInvalidoException() {
-        super("error.reserva.cancelamentoInvalido");
-    }
+  public CancelamentoInvalidoException() {
+    super("error.reserva.cancelamentoInvalido");
+  }
 }

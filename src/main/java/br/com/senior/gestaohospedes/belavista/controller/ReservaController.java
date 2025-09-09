@@ -17,48 +17,49 @@ import java.util.List;
 @RequestMapping("/api/reservas")
 public class ReservaController {
 
-    private final ReservaService reservaService;
+  private final ReservaService reservaService;
 
-    public ReservaController(ReservaService reservaService) {
-        this.reservaService = reservaService;
-    }
+  public ReservaController(ReservaService reservaService) {
+    this.reservaService = reservaService;
+  }
 
-    @PostMapping
-    public Reserva criarReserva(@Valid @RequestBody ReservaRequestDTO dto) {
-        log.info("Requisição para criar nova reserva: {}", dto);
-        Reserva novaReserva = reservaService.criarReserva(dto);
-        log.info("Reserva criada com sucesso: {}", novaReserva);
-        return novaReserva;
-    }
+  @PostMapping
+  public Reserva criarReserva(@Valid @RequestBody ReservaRequestDTO dto) {
+    log.info("Requisição para criar nova reserva: {}", dto);
+    Reserva novaReserva = reservaService.criarReserva(dto);
+    log.info("Reserva criada com sucesso: {}", novaReserva);
+    return novaReserva;
+  }
 
-    @PostMapping("/{id}/check-in")
-    public Reserva realizarCheckIn(@PathVariable Long id) {
-        log.info("Requisição para realizar check-in da reserva com ID: {}", id);
-        Reserva reserva = reservaService.realizarCheckIn(id);
-        log.info("Check-in da reserva {} realizado com sucesso.", id);
-        return reserva;
-    }
+  @PostMapping("/{id}/check-in")
+  public Reserva realizarCheckIn(@PathVariable Long id) {
+    log.info("Requisição para realizar check-in da reserva com ID: {}", id);
+    Reserva reserva = reservaService.realizarCheckIn(id);
+    log.info("Check-in da reserva {} realizado com sucesso.", id);
+    return reserva;
+  }
 
-    @PostMapping("/{id}/check-out")
-    public CheckoutResponseDTO realizarCheckOut(@PathVariable Long id) {
-        log.info("Requisição para realizar check-out da reserva com ID: {}", id);
-        CheckoutResponseDTO checkout = reservaService.realizarCheckOut(id);
-        log.info("Check-out da reserva {} realizado com sucesso. Valor total: {}", id, checkout.getValorTotalGeral());
-        return checkout;
-    }
+  @PostMapping("/{id}/check-out")
+  public CheckoutResponseDTO realizarCheckOut(@PathVariable Long id) {
+    log.info("Requisição para realizar check-out da reserva com ID: {}", id);
+    CheckoutResponseDTO checkout = reservaService.realizarCheckOut(id);
+    log.info("Check-out da reserva {} realizado com sucesso. Valor total: {}", id,
+        checkout.getValorTotalGeral());
+    return checkout;
+  }
 
-    @GetMapping
-    public List<Reserva> buscarReservas(@RequestParam(required = false) StatusReserva status) {
-        log.info("Requisição para buscar reservas com status: {}", status);
-        List<Reserva> reservas = reservaService.buscarReservas(status);
-        log.debug("Total de reservas encontradas: {}", reservas.size());
-        return reservas;
-    }
+  @GetMapping
+  public List<Reserva> buscarReservas(@RequestParam(required = false) StatusReserva status) {
+    log.info("Requisição para buscar reservas com status: {}", status);
+    List<Reserva> reservas = reservaService.buscarReservas(status);
+    log.debug("Total de reservas encontradas: {}", reservas.size());
+    return reservas;
+  }
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void cancelarReserva(@PathVariable Long id) {
-        log.info("Requisição para cancelar a reserva com ID: {}", id);
-        reservaService.cancelarReserva(id);
-    }
+  @DeleteMapping("/{id}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void cancelarReserva(@PathVariable Long id) {
+    log.info("Requisição para cancelar a reserva com ID: {}", id);
+    reservaService.cancelarReserva(id);
+  }
 }

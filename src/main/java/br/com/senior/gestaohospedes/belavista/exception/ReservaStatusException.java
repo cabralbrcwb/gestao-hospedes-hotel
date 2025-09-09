@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 public class ReservaStatusException extends BusinessException {
 
-    public ReservaStatusException(StatusReserva esperado, StatusReserva atual) {
-        super("error.reserva.statusInvalido", esperado, atual);
-    }
+  public ReservaStatusException(StatusReserva esperado, StatusReserva atual) {
+    super("error.reserva.statusInvalido", esperado, atual);
+  }
 }

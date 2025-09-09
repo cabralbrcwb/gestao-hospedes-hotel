@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict xhgMI2JhaJu3NUyBuPcYgbgcEoPmSr9v5zC2pEOApXw1bPXplpE7YRHfQrlYA90
+restrict xhgMI2JhaJu3NUyBuPcYgbgcEoPmSr9v5zC2pEOApXw1bPXplpE7YRHfQrlYA90
 
 -- Dumped from database version 13.22 (Debian 13.22-1.pgdg13+1)
 -- Dumped by pg_dump version 13.22 (Debian 13.22-1.pgdg13+1)

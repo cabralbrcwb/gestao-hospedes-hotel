@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class HospedeNaoEncontradoException extends BusinessException {
 
-    public HospedeNaoEncontradoException(Long id) {
-        super("error.hospede.notFound", id);
-    }
+  public HospedeNaoEncontradoException(Long id) {
+    super("error.hospede.notFound", id);
+  }
 }

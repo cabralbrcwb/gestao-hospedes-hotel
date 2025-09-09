@@ -14,10 +14,10 @@ API RESTful completa para gestão de um hotel, desenvolvida com Spring Boot, seg
 
 - [🎯 Visão Geral](#-visão-geral)
 - [✅ Checklist de Requisitos e Correções](#-checklist-de-requisitos-e-correções)
-- [🏗️ Arquitetura](#️-arquitetura)
+- [🏗️ Arquitetura](#-arquitetura)
 - [💻 Tecnologias Utilizadas](#-tecnologias-utilizadas)
 - [🚀 Endpoints da API](#-endpoints-da-api)
-- [⚙️ Como Executar o Projeto](#️-como-executar-o-projeto)
+- [⚙️ Como Executar o Projeto](#-como-executar-o-projeto)
 - [📖 Documentação Swagger](#-documentação-swagger)
 
 ---
@@ -80,10 +80,10 @@ A aplicação foi desenvolvida seguindo uma **arquitetura em camadas** para gara
 
 ```mermaid
 graph TD
-    A[👤 Cliente] -->|Requisição HTTP| B(Controller);
+    A[Cliente] -->|Requisição HTTP| B(Controller);
     B -->|Chama| C{Service};
     C -->|Processa Lógica| D[Repository];
-    D -->|Acessa Dados| E((🐘 Banco de Dados));
+    D -->|Acessa Dados| E((Banco de Dados));
 ```
 
 -   **Controller**: Camada de entrada da API, responsável por expor os endpoints e receber as requisições.
@@ -94,16 +94,16 @@ graph TD
 
 | Categoria | Tecnologia | Versão/Padrão |
 | :--- | :--- | :--- |
-| **Linguagem & Framework** | ☕ Java | 17 |
-| | 🌱 Spring Boot | 3.3.3 |
-| **Acesso a Dados** | 🐘 PostgreSQL | 13+ |
-| | 🗃️ Spring Data JPA | - |
-| **API & Web** | 🌐 Spring Web | - |
-| | 📖 Springdoc (Swagger) | 2.5.0 |
-| **Build & Utilitários** | 📦 Maven | 4.0.0 |
-| | 📄 Lombok | - |
-| **Validação** | 📝 Bean Validation | - |
-| **Testes** | 🧪 JUnit 5 & Mockito | - |
+| **Linguagem & Framework** | Java | 17 |
+| | Spring Boot | 3.3.3 |
+| **Acesso a Dados** | PostgreSQL | 13+ |
+| | Spring Data JPA | - |
+| **API & Web** | Spring Web | - |
+| | Springdoc (Swagger) | 2.5.0 |
+| **Build & Utilitários** | Maven | 4.0.0 |
+| | Lombok | - |
+| **Validação** | Bean Validation | - |
+| **Testes** | JUnit 5 & Mockito | - |
 
 ### 🚀 Endpoints da API
 
@@ -113,21 +113,21 @@ A seguir, a lista de endpoints disponíveis na aplicação.
 
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `POST` | `/api/hospedes` | Cria um novo hóspede. |
-| `GET` | `/api/hospedes` | Lista/Busca hóspedes por nome, documento ou telefone. |
-| `GET` | `/api/hospedes/{id}` | Busca um hóspede por ID. |
-| `PUT` | `/api/hospedes/{id}` | Atualiza um hóspede existente. |
-| `DELETE` | `/api/hospedes/{id}` | Remove um hóspede. |
+| `POST` | `/api/hospedes` | Cria um novo hóspede. Requer um corpo de requisição com os dados do hóspede. |
+| `GET` | `/api/hospedes` | Lista todos os hóspedes ou busca por `nome`, `documento`, ou `telefone`. |
+| `GET` | `/api/hospedes/{id}` | Busca um hóspede específico pelo seu ID. |
+| `PUT` | `/api/hospedes/{id}` | Atualiza os dados de um hóspede existente. |
+| `DELETE` | `/api/hospedes/{id}` | Remove um hóspede. A operação é bloqueada se o hóspede tiver reservas ativas. |
 
 #### Módulo de Reservas
 
 | Método | Endpoint | Descrição |
 | :--- | :--- | :--- |
-| `POST` | `/api/reservas` | Cria uma nova reserva. |
-| `POST` | `/api/reservas/{id}/check-in` | Realiza o check-in de uma reserva. |
-| `POST` | `/api/reservas/{id}/check-out` | Realiza o check-out e calcula os custos. |
-| `GET` | `/api/reservas` | Lista reservas, com filtro opcional por status. |
-| `DELETE` | `/api/reservas/{id}` | Cancela uma reserva com status `PENDENTE`. |
+| `POST` | `/api/reservas` | Cria uma nova reserva para um hóspede. Requer o ID do hóspede e as datas de entrada/saída. |
+| `POST` | `/api/reservas/{id}/check-in` | Realiza o check-in de uma reserva `PENDENTE`. |
+| `POST` | `/api/reservas/{id}/check-out` | Realiza o check-out de uma reserva com status `CHECK_IN` e retorna a fatura detalhada. |
+| `GET` | `/api/reservas` | Lista todas as reservas ou filtra por status (`PENDENTE`, `CHECK_IN`, `CHECK_OUT`, `CANCELADA`). |
+| `DELETE` | `/api/reservas/{id}` | Cancela uma reserva que ainda está com o status `PENDENTE`. |
 
 ### ⚙️ Como Executar o Projeto
 

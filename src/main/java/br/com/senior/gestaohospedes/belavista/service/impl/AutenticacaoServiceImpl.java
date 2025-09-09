@@ -11,19 +11,20 @@ import org.springframework.stereotype.Service;
 @Service
 public class AutenticacaoServiceImpl implements AutenticacaoService {
 
-    private final UsuarioRepository usuarioRepository;
-    private final MessageSource messageSource;
+  private final UsuarioRepository usuarioRepository;
+  private final MessageSource messageSource;
 
-    public AutenticacaoServiceImpl(UsuarioRepository usuarioRepository, MessageSource messageSource) {
-        this.usuarioRepository = usuarioRepository;
-        this.messageSource = messageSource;
-    }
+  public AutenticacaoServiceImpl(UsuarioRepository usuarioRepository, MessageSource messageSource) {
+    this.usuarioRepository = usuarioRepository;
+    this.messageSource = messageSource;
+  }
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return usuarioRepository.findByLogin(username).orElseThrow(() -> {
-            String errorMessage = messageSource.getMessage("error.user.notfound", new Object[]{username}, LocaleContextHolder.getLocale());
-            return new UsernameNotFoundException(errorMessage);
-        });
-    }
+  @Override
+  public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    return usuarioRepository.findByLogin(username).orElseThrow(() -> {
+      String errorMessage = messageSource.getMessage("error.user.notfound", new Object[]{username},
+          LocaleContextHolder.getLocale());
+      return new UsernameNotFoundException(errorMessage);
+    });
+  }
 }
