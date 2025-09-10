@@ -76,6 +76,14 @@ public class GlobalExceptionHandler {
         .body(createErrorResponse(HttpStatus.BAD_REQUEST, getMessage(ex), request));
   }
 
+  @ExceptionHandler(EnumNaoEncontradoException.class)
+  public ResponseEntity<ErrorResponseDTO> handleEnumNaoEncontrado(
+      EnumNaoEncontradoException ex, WebRequest request) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(createErrorResponse(HttpStatus.BAD_REQUEST, getMessage(ex), request));
+  }
+
+
   @ExceptionHandler(EntityNotFoundException.class)
   public ResponseEntity<ErrorResponseDTO> handleEntityNotFound(EntityNotFoundException ex, WebRequest request) {
     String message = messageSource.getMessage("entity.not.found", null, LocaleContextHolder.getLocale());
