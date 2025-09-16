@@ -6,7 +6,7 @@
 
 </div>
 
-API RESTful completa para gestão de um hotel, desenvolvida com Spring Boot, seguindo as melhores práticas de arquitetura e robustez de processos de negócio.
+API RESTful completa para gestão de um hotel, desenvolvida com Spring Boot, seguindo as melhores práticas de arquitetura e processos de negócio.
 
 ---
 
@@ -26,7 +26,7 @@ API RESTful completa para gestão de um hotel, desenvolvida com Spring Boot, seg
 
 O **Belavista** é uma API RESTful projetada para simplificar a administração de um hotel, oferecendo funcionalidades para cadastrar hóspedes, gerenciar o ciclo de vida completo de uma reserva (criação, check-in, check-out, cancelamento) e calcular os custos de hospedagem de forma automatizada e precisa.
 
-O projeto foi desenvolvido com foco na **robustez dos processos de negócio**, garantindo a integridade dos dados e fornecendo um tratamento de erros claro e consistente.
+O projeto foi desenvolvido com foco na **qualidade dos processos de negócio**, garantindo a integridade dos dados e fornecendo um tratamento de erros claro e consistente.
 
 ### ✅ Checklist de Requisitos e Correções
 
@@ -57,11 +57,6 @@ Esta seção detalha o status de cada requisito solicitado e as principais corre
 -   **DTOs**: `ReservaRequestDTO`, `CheckoutResponseDTO`, `DetalheCustoDTO`, `ErrorResponseDTO` para padronização de respostas.
 
 #### Correções e Melhorias de Arquitetura
-
--   **Blindagem de Processos de Negócio:**
-    -   🛡️ **Exclusão de Hóspedes:** Implementada uma trava que impede a exclusão de um hóspede se ele possuir reservas ativas (`PENDENTE` ou `CHECK_IN`), garantindo a integridade referencial dos dados (`HospedeComReservaAtivaException`).
-    -   🛡️ **Criação de Reservas:** Adicionadas validações para impedir a criação de reservas com data de saída anterior à de entrada (`DataInvalidaException`) e para evitar a sobreposição de datas para o mesmo hóspede (`ReservaSobrepostaException`).
-
 -   **Evolução do Modelo de Dados:**
     -   🧾 **Fatura Detalhada:** O DTO de resposta do check-out (`CheckoutResponseDTO`) foi refatorado. Em vez de uma simples lista de textos, ele agora utiliza uma lista de `DetalheCustoDTO`, fornecendo dados estruturados para o frontend e desacoplando a lógica de formatação.
 
